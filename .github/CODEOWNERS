@@ -1,0 +1,26 @@
+# CSVPL code owners.
+#
+# Every PR requires review from an owner of the files it touches.
+# Maintainers: update the owner list below before merging PR 1 of the
+# platform-refresh program. The placeholder below keeps the repository
+# owner as the default reviewer until that happens.
+
+*                               @larrycaw
+
+# Core shell and command dispatch
+/src/main/java/ai/preferred/regression/Shell.java           @larrycaw
+/src/main/java/ai/preferred/regression/Command.java         @larrycaw
+
+# Processing elements
+/src/main/java/ai/preferred/regression/pe/                  @larrycaw
+
+# Build, CI, and release
+/pom.xml                                                    @larrycaw
+/.github/                                                   @larrycaw
+/.mvn.xml                                                   @larrycaw
+
+# Docs & governance
+/docs/                                                      @larrycaw
+/CONTRIBUTING.md                                            @larrycaw
+/SUPPORT.md                                                 @larrycaw
+/COMPATIBILITY.md                                           @larrycaw
