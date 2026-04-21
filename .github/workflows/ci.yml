@@ -39,16 +39,10 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: maven
 
-      # Resolve the slf4j version range pinned in pom.xml so downstream
-      # goals see a concrete version. PR 3 removes this step by pinning
-      # the version directly in pom.xml.
-      - name: Resolve dependency ranges
-        run: mvn --batch-mode versions:resolve-ranges -DgenerateBackupPoms=false
-
       - name: Build and test
         run: >
           mvn --batch-mode --update-snapshots
-          -Dgpg.skip -Dmaven.javadoc.skip=true
+          -P ci
           clean test jacoco:report
 
       - name: Upload surefire reports
@@ -85,13 +79,9 @@ jobs:
           java-version: '11'
           cache: maven
 
-      - name: Resolve dependency ranges
-        run: mvn --batch-mode versions:resolve-ranges -DgenerateBackupPoms=false
-
       - name: Generate coverage report
         run: >
           mvn --batch-mode
-          -Dgpg.skip -Dmaven.javadoc.skip=true
           clean test jacoco:report
 
       - name: Report to Coveralls

@@ -32,11 +32,13 @@
     </servers>
 
     <profiles>
+        <!--
+          Credentials profile for the release flow. Activated explicitly via
+          `-P release` (matching the release profile defined in pom.xml), not
+          by default — local `mvn test` should not touch release plumbing.
+        -->
         <profile>
             <id>release</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <properties>
                 <gpg.executable>${env.GPG_EXECUTABLE}</gpg.executable>
             </properties>
