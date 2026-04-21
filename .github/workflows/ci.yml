@@ -1,0 +1,102 @@
+# CSVPL continuous integration.
+#
+# Parity replacement for .travis.yml. Runs the same test + jacoco + coveralls
+# pipeline. The Java version matrix is intentionally single-valued here
+# (JDK 11) to preserve behavior from the Travis build; PR 4 of the platform
+# refresh bumps the floor to 17 and widens the matrix to [17, 21].
+
+name: CI
+
+on:
+  push:
+    branches: [master, main, 'claude/**']
+  pull_request:
+    branches: [master, main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (jdk-${{ matrix.java }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['11']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+
+      # Resolve the slf4j version range pinned in pom.xml so downstream
+      # goals see a concrete version. PR 3 removes this step by pinning
+      # the version directly in pom.xml.
+      - name: Resolve dependency ranges
+        run: mvn --batch-mode versions:resolve-ranges -DgenerateBackupPoms=false
+
+      - name: Build and test
+        run: >
+          mvn --batch-mode --update-snapshots
+          -Dgpg.skip -Dmaven.javadoc.skip=true
+          clean test jacoco:report
+
+      - name: Upload surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports-jdk${{ matrix.java }}
+          path: target/surefire-reports/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload jacoco report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report-jdk${{ matrix.java }}
+          path: target/site/jacoco/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  coverage:
+    name: coverage
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+          cache: maven
+
+      - name: Resolve dependency ranges
+        run: mvn --batch-mode versions:resolve-ranges -DgenerateBackupPoms=false
+
+      - name: Generate coverage report
+        run: >
+          mvn --batch-mode
+          -Dgpg.skip -Dmaven.javadoc.skip=true
+          clean test jacoco:report
+
+      - name: Report to Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/site/jacoco/jacoco.xml
+          format: jacoco

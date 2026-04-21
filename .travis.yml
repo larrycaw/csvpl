@@ -1,3 +1,8 @@
+# DEPRECATED: this Travis configuration is superseded by
+# .github/workflows/ci.yml (GitHub Actions). It is kept for one release cycle
+# as a rollback path and is removed by PR 3 of the platform-refresh plan.
+# Do not add new logic here — edit the GitHub Actions workflow instead.
+
 language: java
 jdk:
 - openjdk11
